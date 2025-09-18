@@ -1,0 +1,88 @@
+# =============================================================================
+# VitaCare UFT - TypeScript/Playwright Project .gitignore
+# =============================================================================
+
+# Node.js Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# TypeScript Build Output
+dist/
+build/
+lib/
+out/
+*.tsbuildinfo
+*.d.ts.map
+
+# Playwright Test Results & Reports
+test-results/
+playwright-report/
+playwright/.cache/
+test-attachments/
+screenshots/
+videos/
+downloads/
+
+# Test Coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE & Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary Files
+*.tmp
+*.temp
+.cache/
+.eslintcache
+
+# Package Manager Lock Backups
+package-lock.json.backup
+yarn.lock.backup
+
+# Runtime Files
+*.pid
+*.seed
+*.pid.lock
+
+# Optional: Allure Reports (if using)
+allure-results/
+.allure/
+
+# Project Specific Cleanup
+myproject/
+legacy-java-backup/
+target/
+
+# Playwright
+/playwright-report/
+/blob-report/
+/playwright/.cache/

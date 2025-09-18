@@ -152,115 +152,56 @@ This opens the Playwright Inspector for interactive debugging.
 
 ## Clean Up
 
-To remove generated files:
+To remove generated files (reports, test results, traces, videos):
 ```bash
-npm run clean
+npm run clean:windows
 ```
 
-This removes test results, reports, and other generated directories.
+This removes transient artifacts (e.g., `playwright-report/`, `test-results/`, traces, videos) so the repository stays lean.
 
-## 📊 Default Playwright HTML Reports
+### Removed Example / Boilerplate Files
 
-The project uses Playwright's built-in HTML reporting which provides:
-- **Rich test results** with screenshots and videos
-- **Timeline view** showing test execution flow  
-- **Error details** with stack traces and screenshots
-- **Test artifacts** (videos, traces, screenshots) embedded
-- **Filtering and search** capabilities
-- **Automatic browser opening** after test completion
+The default Playwright scaffold example specs were removed to keep the suite focused:
+- `e2e/example.spec.ts`
+- `tests-examples/demo-todo-app.spec.ts`
 
-The HTML report will automatically open in your browser after running `npm run test:report` or can be viewed anytime with `npm run show-report`.
-=======
-# VitaCare Playwright (TypeScript)
-
-This project is a Playwright + TypeScript test automation project for VitaCare e-commerce website.
-
-## Project structure
-
-- `pages/` — Playwright Page Objects for UI interactions
-- `tests/` — Playwright test files 
-- `data/` — Test data JSON files (login, profile data)
-- `playwright.config.ts` — Playwright configuration with HTML reporter
-- `package.json` — Scripts and dependencies
-- `tsconfig.json` — TypeScript configuration
-
-## Test Coverage
-
-The main test (`vitacare.spec.ts`) covers:
-1. **Onboarding**: Homepage navigation, language selection, location setup
-2. **Authentication**: Login via OTP
-3. **Profile Management**: Update customer profile information
-4. **Product Flow**: Search product, verify details, modify quantity, add to cart
-
-## Install and run (Windows PowerShell)
-
-If you see an execution policy error when running npm, you have two options:
-- Start PowerShell as Administrator and run: `Set-ExecutionPolicy -Scope CurrentUser Bypass`
-- Or use the PowerShell flag per command: `powershell -ExecutionPolicy Bypass -Command "npm i"`
-
-Steps:
-
-1. Install dependencies
-
-```powershell
-# Option A: Regular (if policy allows)
-npm install
-
-# Option B: With policy bypass
-powershell -ExecutionPolicy Bypass -Command "npm install"
+These were Playwright sample/demo tests and not related to VitaCare business flows. If you need the originals again you can regenerate them by running:
+```bash
+npx playwright init temp-scaffold
 ```
+…and then copy any sample back if desired.
 
-2. Install Playwright browsers (one-time)
-
-```powershell
-npx playwright install
-```
-
-3. Run tests
-
-```powershell
-# Run tests headlessly
+### Regenerating Reports & Artifacts
+After a clean, just run:
+```bash
 npx playwright test
-
-# Run tests with browser visible
-npx playwright test --headed
-
-# Run specific test file
-npx playwright test tests/vitacare.spec.ts
-
-# Open HTML report after test run
 npx playwright show-report
-
-# Run tests and automatically open report
-npm run test:report
+```
+Or use the convenience script (includes multi-reporter configuration with HTML, JUnit, JSON, line):
+```bash
+npm run vitacare
 ```
 
-## Video Recording
+### Artifact Locations
+- HTML report: `playwright-report/`
+- Test run outputs (videos, traces, screenshots): `test-results/`
+- JUnit XML: `junit-result.xml` (inside report output or root depending on config)
+- JSON summary: `results.json`
 
-Tests automatically record full-screen videos when running with browser visible. Videos are saved in WebM format in the `test-results` directory for each test run.
+These are intentionally ignored by Git and regenerated per run.
 
-## Notes
+## 📊 Reporting & Artifacts
 
-- Tests are executed in a single serial spec using `test.step(...)` to preserve the original JUnit test order and semantics.
-- All locators were extracted and mapped from the original Java Page Objects:
-  - HomePage: `#close-push-notification`, `#customerlanguage`, `#login-link`, `a.ico-logout`, select2 containers, search input
-  - LoginPage: `#otp_login_Phone`, `#btnOtpSendPopup`, `#otp_login_Otp`, `#btnVerifyOtpPopup`
-  - CustomerProfilePage: menu + form inputs and save button
-  - SearchResultsPage: `.product-title`
-  - ProductDetailsPage: `#main .product-name h1`
-- Test data is read from `data/login-data.json` and `data/profile-data.json`.
+Enhanced reporters are configured (HTML, JUnit XML, JSON, line). Videos are retained on failures; traces captured on first retry. A summary object aggregates pass/fail metrics at suite end.
 
-## Removing old Java/Maven files
-
-A convenience script exists to clean legacy artifacts:
-
-```powershell
-npm run clean
+Run with full artifact capture:
+```bash
+npm run test:full
 ```
 
-If preferred, you can also delete these manually in the IDE: `pom.xml`, `src/`, and `target/`.
+Open the latest HTML report anytime:
+```bash
+npx playwright show-report
+```
 
-## Troubleshooting
-
-- If TypeScript shows missing types for Node or Playwright, ensure `npm install` completed successfully and `@types/node` and `@playwright/test` are installed.
-- For Allure report rendering, ensure Java is available on PATH (Allure CLI requires Java). If not, install Java 8+.
+For CI systems you can consume `junit-result.xml` and `results.json` for build annotations and dashboards.

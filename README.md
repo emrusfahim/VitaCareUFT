@@ -205,3 +205,60 @@ npx playwright show-report
 ```
 
 For CI systems you can consume `junit-result.xml` and `results.json` for build annotations and dashboards.
+
+## Modules Architecture
+
+To make the test specification concise and business‑readable, a higher-level "modules" layer sits on top of the Page Object Model. Each module orchestrates one cohesive slice of the end‑to‑end flow by composing multiple page objects.
+
+Directory: `modules/`
+
+| Module | Responsibility | Key Methods |
+|--------|----------------|-------------|
+| `AuthModule` | Launch site, prepare context (alert, language, location), OTP login | `launchAndPrepare(url, language, city, area)`, `loginWithOtp(phone, otp)` |
+| `ProfileModule` | Navigate to profile and maintain customer details | `updateProfile(data)`, `verifyProfile(data)` |
+| `CatalogModule` | Product discovery and cart addition via search | `searchAndOpenProduct(name)`, `addProductToCart(name)`, `addMultipleProducts(names)` |
+| `CheckoutModule` | Cart/checkout operations and order completion | `goToCart()`, `goToCheckoutViaButton()`, `adjustQuantities(opts)`, `selectPickup()`, `applyDiscount(code)`, `applyGiftCard(code)`, `confirmOrder()` |
+
+### Design Principles
+- **Separation of Concerns**: Page objects expose low-level UI interactions. Modules express business intent (e.g., `addProductToCart`).
+- **Composability**: Modules are stateless aside from the Playwright `Page` context; they can be instantiated in any test.
+- **Declarative Tests**: The main spec now reads as a storyboard of the user journey rather than a list of raw locators.
+- **Minimal Coupling**: Tests never reach into page internals; only module/public page APIs are used.
+
+### Example Usage (from spec)
+```ts
+const auth = new AuthModule(page);
+await auth.launchAndPrepare(BASE_URL, 'EN', 'Dhaka', 'Banasree');
+await auth.loginWithOtp(loginData.phone, loginData.otp);
+
+const catalog = new CatalogModule(page);
+await catalog.addMultipleProducts([PRODUCT_ONE, PRODUCT_TWO]);
+
+const checkout = new CheckoutModule(page);
+await checkout.goToCart();
+await checkout.goToCheckoutViaButton();
+await checkout.adjustQuantities({ minusClicksPerItem: 3, plusClicksPerItem: 1 });
+await checkout.selectPickup();
+await checkout.applyDiscount('test10');
+await checkout.applyGiftCard('5ba27cfd-a121');
+await checkout.confirmOrder();
+```
+
+### Extending a Module
+1. Add a new method inside the appropriate module (e.g., `applyStoreCredit()` in `CheckoutModule`).
+2. Keep business logic there; if a page action is missing, add a helper to the related Page Object.
+3. Keep waits minimal and prefer existing page wait helpers.
+
+### When to Create a New Module
+Create a new module when a flow:
+* Spans multiple pages
+* Is reused by more than one spec
+* Has clear business meaning (e.g., `ReturnsModule`, `WishlistModule`)
+
+### Testing Philosophy
+The single end‑to‑end spec validates the golden path. You can layer in:
+- **Smoke specs** calling a subset of modules
+- **Negative/path variation specs** (e.g., invalid OTP) using the same module APIs
+- **Component-level tests** directly on page objects if needed for faster feedback
+
+This layered approach keeps readability high while enabling future scaling.

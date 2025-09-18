@@ -1,18 +1,18 @@
 import { test, expect, Page } from '@playwright/test';
 import { JsonDataReader } from '../utils/JsonDataReader';
 import { LoginData, ProfileData } from '../utils/DataTypes';
-import { AuthModule } from '../modules/AuthModule';
-import { ProfileModule } from '../modules/ProfileModule';
-import { CatalogModule } from '../modules/CatalogModule';
-import { CheckoutModule } from '../modules/CheckoutModule';
+import { HomePage } from '../pages/HomePage';
+import { LoginPage } from '../pages/LoginPage';
+import { CustomerProfilePage } from '../pages/CustomerProfilePage';
+import { SearchResultsPage } from '../pages/SearchResultsPage';
+import { ProductDetailsPage } from '../pages/ProductDetailsPage';
 
 test.describe('VitaCare E-Commerce Automation Suite', () => {
   let page: Page;
-  // Modules
-  let auth: AuthModule;
-  let profile: ProfileModule;
-  let catalog: CatalogModule;
-  let checkout: CheckoutModule;
+  // Page objects
+  let homePage: HomePage;
+  let loginPage: LoginPage;
+  let profilePage: CustomerProfilePage;
   let testData: LoginData;
   let profileData: ProfileData;
   const BASE_URL = 'https://vitacare.nop-station.com/';
@@ -49,11 +49,9 @@ test.describe('VitaCare E-Commerce Automation Suite', () => {
     
     testData = JsonDataReader.getLoginData();
     profileData = JsonDataReader.getProfileData();
-    // Initialize modules
-    auth = new AuthModule(page);
-    profile = new ProfileModule(page);
-    catalog = new CatalogModule(page);
-    checkout = new CheckoutModule(page);
+    // Initialize page objects
+    homePage = new HomePage(page);
+    profilePage = new CustomerProfilePage(page);
   });
 
   test.afterAll(async () => {
@@ -107,78 +105,168 @@ test.describe('VitaCare E-Commerce Automation Suite', () => {
 
   test.describe.configure({ mode: 'serial' });
 
-  // Combined setup & auth sequence preserving original step semantics
-  test('Steps 01-09: Launch, prepare context, and authenticate user', async () => {
-    await test.step('01-04: Launch site, close alert, set language & location', async () => {
-      await auth.launchAndPrepare(BASE_URL, 'EN', 'Dhaka', 'Banasree');
-      console.log('✅ Steps 01-04 PASSED: Environment prepared');
-      testResults['Steps 01-04: Environment Preparation'] = '✅';
-    });
-    await test.step('05-09: OTP Login flow', async () => {
-      await auth.loginWithOtp(testData.phone, testData.otp);
-      expect(page.url()).toContain('vitacare');
-      console.log('✅ Steps 05-09 PASSED: Authenticated successfully');
-      testResults['Steps 05-09: Authentication'] = '✅';
-    });
+  test('Step 01: Open homepage', async () => {
+    await homePage.navigateToHomePage(BASE_URL);
+    expect(await homePage.isHomePageLoaded()).toBeTruthy();
+    testResults['Step 01: Homepage Navigation'] = '✅';
   });
 
-  test('Steps 10-11: Update and verify profile information', async () => {
-    await test.step('Navigate & update profile', async () => {
-      await profile.updateProfile(profileData);
-      console.log('📝 Profile fields submitted');
-    });
-    await test.step('Verify profile data', async () => {
-      await profile.verifyProfile(profileData);
-      console.log('✅ Steps 10-11 PASSED: Profile updated & verified');
-      testResults['Steps 10-11: Profile Update & Verification'] = '✅';
-    });
+  test('Step 02: Close alert notification if present', async () => {
+    await homePage.closeAlert();
+    testResults['Step 02: Alert Handling'] = '✅';
   });
 
-  const PRODUCT_ONE = 'Vitacare Air Freshener Anti -Tobacco Spray 300 ml';
-  const PRODUCT_TWO = 'Vitacare Air Freshener 300 ml All Combo pack of 12 Items';
+  test('Step 03: Select English language', async () => {
+    await homePage.selectLanguage('EN');
+    testResults['Step 03: Language Selection'] = '✅';
+  });
 
-  test('Steps 12-14: Add two products to cart and view cart', async () => {
-    await test.step('Search and add first product', async () => {
-      await catalog.addProductToCart(PRODUCT_ONE);
-    });
-    await test.step('Search and add second product', async () => {
-      await catalog.addProductToCart(PRODUCT_TWO);
-    });
-    await test.step('View cart (via topcartlink)', async () => {
-      await checkout.goToCart();
-      console.log('✅ Steps 12-14 PASSED: Two products added and cart viewed');
-      testResults['Steps 12-14: Add Products & View Cart'] = '✅';
-    });
+  test('Step 04: Select Dhaka / Banasree location', async () => {
+    await homePage.selectLocationAndContinue('Dhaka', 'Banasree');
+    expect(homePage.getCurrentUrl()).toContain('vitacare');
+    testResults['Step 04: Location Selection'] = '✅';
+  });
+
+  test('Step 05: Navigate to login page', async () => {
+    loginPage = await homePage.clickLogin();
+    expect(await loginPage.isLoginPageLoaded()).toBeTruthy();
+    testResults['Step 05: Login Page Loaded'] = '✅';
+  });
+
+  test('Step 06: Enter phone number', async () => {
+    await loginPage.enterPhoneNumber(testData.phone);
+    const phoneValue = await loginPage.getPhoneInputValue();
+    expect(phoneValue).toContain(testData.phone.substring(0,4));
+    testResults['Step 06: Phone Entered'] = '✅';
+  });
+
+  test('Step 07: Send OTP', async () => {
+    await loginPage.sendOtp();
+    expect(await loginPage.isOtpFieldVisible()).toBeTruthy();
+    testResults['Step 07: OTP Sent'] = '✅';
+  });
+
+  test('Step 08: Enter OTP', async () => {
+    await loginPage.enterOtp(testData.otp);
+    const otpValue = await loginPage.getOtpInputValue();
+    expect(otpValue).not.toBe('');
+    testResults['Step 08: OTP Entered'] = '✅';
+  });
+
+  test('Step 09: Verify OTP and login', async () => {
+    homePage = await loginPage.verifyOtp();
+    expect(homePage.getCurrentUrl()).toContain('vitacare');
+    testResults['Step 09: OTP Verified / Logged In'] = '✅';
+  });
+
+  test('Step 10: Navigate to profile page', async () => {
+    await profilePage.goToCustomerInfo();
+    expect(await profilePage.isProfilePageLoaded()).toBeTruthy();
+    testResults['Step 10: Profile Page Loaded'] = '✅';
+  });
+
+  test('Step 11: Update profile information', async () => {
+    await profilePage.updateProfileInfo(
+      profileData.firstName,
+      profileData.lastName,
+      profileData.email,
+      profileData.companyName
+    );
+    expect(await profilePage.getFirstName()).toBe(profileData.firstName);
+    expect(await profilePage.getLastName()).toBe(profileData.lastName);
+    expect(await profilePage.getEmail()).toBe(profileData.email);
+    expect(await profilePage.getCompanyName()).toBe(profileData.companyName);
+    testResults['Step 11: Profile Updated'] = '✅';
+  });
+
+  test('Step 12: Search for first product and open details', async () => {
+    const productName = 'Vitacare Air Freshener Anti -Tobacco Spray 300 ml';
+    const searchResults = await homePage.searchProduct(productName) as SearchResultsPage;
+    await (searchResults as SearchResultsPage).clickOnBestMatchingProduct(productName);
+    const productDetails = new ProductDetailsPage(page);
+    expect(await productDetails.isAddToCartButtonVisible()).toBeTruthy();
+    testResults['Step 12: First Product Found'] = '✅';
+  });
+
+  test('Step 13: Add first product to cart', async () => {
+    const productDetails = new ProductDetailsPage(page);
+    await productDetails.addToCart();
+    testResults['Step 13: First Product Added'] = '✅';
+  });
+
+  test('Step 14: Search second product, add to cart, and view cart', async () => {
+    const secondProduct = 'Vitacare Air Freshener 300 ml All Combo pack of 12 Items';
+    const searchResults = await homePage.searchProduct(secondProduct) as SearchResultsPage;
+    await searchResults.clickOnBestMatchingProduct(secondProduct);
+    const productDetails = new ProductDetailsPage(page);
+    await productDetails.addToCart();
+    // View cart via topcartlink
+    const shoppingCartLink = page.locator('#topcartlink');
+    await shoppingCartLink.waitFor({ state: 'visible', timeout: 5000 });
+    await shoppingCartLink.click();
+    await page.waitForTimeout(500);
+    testResults['Step 14: Second Product Added & Cart Viewed'] = '✅';
   });
 
   test('Step 15: Navigate to checkout and complete order', async () => {
-    await test.step('Navigate directly to checkout page', async () => {
-      await checkout.goToCheckoutViaButton();
-      console.log('✅ Checkout page reached');
-    });
+    // Navigate directly to checkout via "Go to cart" button
+    const goToCartButton = page.locator("//button[normalize-space()='Go to cart']");
+    await goToCartButton.waitFor({ state: 'visible', timeout: 5000 });
+    await goToCartButton.click();
+    await page.waitForTimeout(800);
+    expect(page.url().toLowerCase()).toContain('checkout');
 
-    await test.step('Modify product quantities on checkout page', async () => {
-      await checkout.adjustQuantities({ minusClicksPerItem: 3, plusClicksPerItem: 1 });
-      console.log('✅ Quantity modifications completed');
-    });
+    // Quantity adjustments
+    const qtyMinus = page.locator('.qty-btn.qty-minus');
+    const minusCount = await qtyMinus.count();
+    for (let i = 0; i < minusCount; i++) {
+      for (let c = 0; c < 3; c++) {
+        await qtyMinus.nth(i).click();
+        await page.waitForTimeout(150);
+      }
+    }
+    const qtyPlus = page.locator('.qty-btn.qty-plus');
+    const plusCount = await qtyPlus.count();
+    for (let i = 0; i < plusCount; i++) {
+      await qtyPlus.nth(i).click();
+      await page.waitForTimeout(150);
+    }
 
-    await test.step('Select pickup option', async () => {
-      await checkout.selectPickup();
-      console.log('✅ Pickup option selected');
-    });
+    // Pickup option
+    const pickupLabel = page.locator("//label[normalize-space()='Pickup']");
+    if (await pickupLabel.isVisible()) {
+      await pickupLabel.click();
+      await page.waitForTimeout(300);
+    }
 
-    await test.step('Apply discount coupon and gift card', async () => {
-      await checkout.applyDiscount('test10');
-      await checkout.applyGiftCard('5ba27cfd-a121');
-      console.log('✅ Coupons applied');
-    });
+    // Apply coupons
+    const discountInput = page.locator('#discountcouponcode');
+    if (await discountInput.isVisible()) {
+      await discountInput.clear();
+      await discountInput.fill('test10');
+      const applyDiscountBtn = page.locator('#applydiscountcouponcode');
+      if (await applyDiscountBtn.isVisible()) {
+        await applyDiscountBtn.click();
+        await page.waitForTimeout(500);
+      }
+    }
+    const giftCardInput = page.locator('#giftcardcouponcode');
+    if (await giftCardInput.isVisible()) {
+      await giftCardInput.clear();
+      await giftCardInput.fill('5ba27cfd-a121');
+      const applyGiftBtn = page.locator('#applygiftcardcouponcode');
+      if (await applyGiftBtn.isVisible()) {
+        await applyGiftBtn.click();
+        await page.waitForTimeout(500);
+      }
+    }
 
-    await test.step('Confirm the order', async () => {
-      await checkout.confirmOrder();
-      console.log('🎉 Order confirmed successfully!');
-      console.log('✅ Step 15 COMPLETED: Full checkout process');
-      testResults['Step 15: Checkout Complete'] = '✅';
-    });
+    // Confirm order
+    const confirmBtn = page.locator('#confirm-order-button');
+    await confirmBtn.waitFor({ state: 'visible', timeout: 5000 });
+    await confirmBtn.click();
+    await page.waitForTimeout(1500);
+    testResults['Step 15: Checkout Complete'] = '✅';
   });
 });
 

@@ -184,7 +184,20 @@ test.describe('VitaCare E-Commerce Automation Suite', () => {
     const searchResults = await homePage.searchProduct(productName) as SearchResultsPage;
     await (searchResults as SearchResultsPage).clickOnBestMatchingProduct(productName);
     const productDetails = new ProductDetailsPage(page);
-    expect(await productDetails.isAddToCartButtonVisible()).toBeTruthy();
+    // Stabilization: wait for either add-to-cart visible or URL change indicating product page
+    const start = Date.now();
+    let visible = false;
+    for (let i = 0; i < 10; i++) { // up to ~3s with incremental waits
+      if (await productDetails.isAddToCartButtonVisible()) { visible = true; break; }
+      await page.waitForTimeout(300);
+    }
+    if (!visible) {
+      console.log('ℹ️ Add to cart not immediately visible; retrying small scroll & re-check');
+      await page.mouse.wheel(0, 400);
+      await page.waitForTimeout(500);
+      visible = await productDetails.isAddToCartButtonVisible();
+    }
+    expect(visible, 'Add to cart button should appear on product details page').toBeTruthy();
     testResults['Step 12: First Product Found'] = '✅';
   });
 

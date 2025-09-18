@@ -142,54 +142,13 @@ export class HomePage extends BasePage {
   }
 
   async searchProduct(query: string): Promise<any> {
-    // Attempt to dismiss any blocking overlays/popups first
-    await this.dismissBlockingElements();
-    // Ensure search input is present; if not, navigate home and retry once
-    for (let attempt = 0; attempt < 2; attempt++) {
-      if (await this.searchInput.isVisible().catch(() => false)) {
-        try {
-          await this.searchInput.click({ timeout: 3000 });
-          await this.searchInput.clear();
-          await this.searchInput.fill(query);
-          await this.searchInput.press('Enter');
-          const { SearchResultsPage } = require('./SearchResultsPage');
-          return new SearchResultsPage(this.page);
-        } catch (err) {
-          console.log(`Search attempt failed (attempt ${attempt + 1}):`, (err as Error).message);
-          // Attempt to dismiss overlays and retry within attempt loop
-          await this.dismissBlockingElements();
-        }
-      }
-      if (attempt === 0) {
-        console.log('Reloading home page to recover missing/hidden search input...');
-        await this.page.goto('https://vitacare.nop-station.com/', { waitUntil: 'domcontentloaded' });
-        await this.page.waitForTimeout(500);
-        await this.dismissBlockingElements();
-      }
-    }
-    throw new Error('Search input not available after retrying.');
-  }
-
-  private async dismissBlockingElements(): Promise<void> {
-    const potentialCloseSelectors = [
-      '#close-push-notification',
-      '.popup-notification .close',
-      '.newsletter-popup .close',
-      'button.close',
-      'span[title="Close"]',
-      '.modal-dialog .close'
-    ];
-    for (const sel of potentialCloseSelectors) {
-      const loc = this.page.locator(sel);
-      if (await loc.first().isVisible().catch(() => false)) {
-        try {
-          await loc.first().click({ timeout: 1000 });
-          await this.page.waitForTimeout(200);
-        } catch { /* ignore */ }
-      }
-    }
-    // Also try Escape key to dismiss any native dialogs
-    try { await this.page.keyboard.press('Escape'); } catch { /* ignore */ }
+    await this.searchInput.click();
+    await this.searchInput.clear();
+    await this.searchInput.fill(query);
+    await this.searchInput.press('Enter');
+    // Use require() for CommonJS compatibility
+    const { SearchResultsPage } = require('./SearchResultsPage');
+    return new SearchResultsPage(this.page);
   }
 
   async viewCart(): Promise<void> {

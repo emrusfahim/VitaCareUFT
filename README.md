@@ -205,4 +205,3 @@ npx playwright show-report
 ```
 
 For CI systems you can consume `junit-result.xml` and `results.json` for build annotations and dashboards.
-

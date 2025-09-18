@@ -29,7 +29,8 @@ export default defineConfig({
     }],
     ['junit', { outputFile: 'test-results/junit.xml' }],
     ['json', { outputFile: 'test-results/results.json' }],
-    ['line']
+    ['line'],
+    ['./reporters/summary-reporter.ts']
   ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
@@ -45,22 +46,15 @@ export default defineConfig({
     navigationTimeout: 15000, // Reduced from default 30s
     /* Faster action timeout */
     actionTimeout: 8000, // Reduced from default 30s
+    /* Record video for all tests with explicit directory */
+    video: {
+      mode: 'on',
+      size: { width: 1280, height: 720 }
+    },
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
     /* Take screenshot on failure */
-    screenshot: 'only-on-failure',
-    /* Record video on failure */
-    video: {
-      mode: 'retain-on-failure',
-      size: { width: 1280, height: 720 }
-    },
-    /* Additional tracking and debugging */
-    contextOptions: {
-      recordVideo: {
-        dir: 'test-results/videos/',
-        size: { width: 1280, height: 720 }
-      }
-    }
+    screenshot: 'only-on-failure'
   },
 
   /* Configure projects for major browsers */

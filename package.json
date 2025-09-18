@@ -1,0 +1,30 @@
+{
+  "name": "vitacare-playwright-typescript",
+  "version": "1.0.0",
+  "description": "VitaCare automation tests using Playwright TypeScript",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:debug": "npx playwright test --debug",
+    "test:ui": "npx playwright test --ui",
+    "test:chromium": "npx playwright test --project=chromium",
+    "test:report": "npm run test && npx playwright show-report",
+    "show-report": "npx playwright show-report",
+    "install:browsers": "npx playwright install",
+    "clean": "rm -rf test-results playwright-report"
+  },
+  "keywords": [
+    "playwright",
+    "typescript",
+    "automation",
+    "testing"
+  ],
+  "author": "VitaCare Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.8.0",
+    "typescript": "^5.2.2"
+  }
+}

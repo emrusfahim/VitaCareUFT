@@ -1,0 +1,23 @@
+{
+  "folders": [
+    {
+      "name": "VitaCareUFT",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "git.defaultCloneDirectory": ".",
+    "explorer.compactFolders": false,
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/test-results": true,
+      "**/playwright-report": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-playwright.playwright",
+      "ms-vscode.vscode-typescript-next"
+    ]
+  }
+}
